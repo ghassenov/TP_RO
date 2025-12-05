@@ -1,9 +1,9 @@
 class MailboxLocationModel:
-    def __init__(self, demand_points, facilities, radius, num_mailboxes):
+    def __init__(self, demand_points, num_mailboxes, radius, 
+                 costs=None, budgets=None, capacities=None):
         self.demand_points = demand_points
-        self.facilities = facilities
-        self.radius = radius
         self.num_mailboxes = num_mailboxes
-
-    def distance(self, p, f):
-        return ((p["x"] - f["x"])**2 + (p["y"] - f["y"])**2) ** 0.5
+        self.radius = radius
+        self.costs = costs if costs else [1.0] * num_mailboxes
+        self.budgets = budgets
+        self.capacities = capacities
