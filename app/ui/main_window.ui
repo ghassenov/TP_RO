@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowTitle">
+   <string>Mailbox Location Optimizer</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout">
+    <item>
+     <widget class="QPushButton" name="loadButton">
+      <property name="text">
+       <string>Load JSON Data</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="solveButton">
+      <property name="text">
+       <string>Solve Optimization</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="status">
+      <property name="text">
+       <string>Status: Ready</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

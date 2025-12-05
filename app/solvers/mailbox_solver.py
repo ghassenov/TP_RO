@@ -1,0 +1,1 @@
+from modules.subject_mailbox_location.solver import MailboxLocationSolver
