@@ -215,37 +215,53 @@ class TelecomController:
 
     def load_example_data(self):
         try:
-            # Example nodes
             example_nodes = [
-                {"name": "Paris", "x": 0, "y": 0},
-                {"name": "Lyon", "x": 3, "y": 2},
-                {"name": "Marseille", "x": 5, "y": -1},
-                {"name": "Toulouse", "x": 2, "y": -3},
-                {"name": "Lille", "x": -1, "y": 4}
+                {"name": "Tunis", "x": 0, "y": 0},
+                {"name": "Sfax", "x": 4, "y": -2},
+                {"name": "Sousse", "x": 2, "y": 1},
+                {"name": "Kairouan", "x": 1, "y": -1},
+                {"name": "Bizerte", "x": -1, "y": 2},
+                {"name": "Gabès", "x": 5, "y": -3},
+                {"name": "Gafsa", "x": 3, "y": -4},
+                {"name": "Tozeur", "x": 4, "y": -5}
             ]
 
-            # Example links
             example_links = [
-                {"from": 0, "to": 1, "distance": 3.6},
-                {"from": 0, "to": 2, "distance": 5.1},
-                {"from": 0, "to": 3, "distance": 3.6},
-                {"from": 0, "to": 4, "distance": 4.1},
-                {"from": 1, "to": 2, "distance": 3.2},
-                {"from": 1, "to": 3, "distance": 3.0},
-                {"from": 1, "to": 4, "distance": 5.0},
-                {"from": 2, "to": 3, "distance": 3.0},
-                {"from": 2, "to": 4, "distance": 6.4},
-                {"from": 3, "to": 4, "distance": 5.8}
+                {"from": 0, "to": 1, "distance": 4.2},
+                {"from": 0, "to": 2, "distance": 1.4},
+                {"from": 0, "to": 3, "distance": 1.6},
+                {"from": 0, "to": 4, "distance": 0.8},
+                {"from": 0, "to": 5, "distance": 4.8},
+                {"from": 0, "to": 6, "distance": 3.4},
+                {"from": 0, "to": 7, "distance": 4.6},
+
+                {"from": 2, "to": 1, "distance": 2.8},
+                {"from": 2, "to": 4, "distance": 2.0},
+
+                {"from": 1, "to": 5, "distance": 1.0},
+                {"from": 5, "to": 7, "distance": 1.4},
+                {"from": 6, "to": 7, "distance": 1.2},
+                {"from": 1, "to": 6, "distance": 2.0},
+
+                {"from": 3, "to": 2, "distance": 1.2},
+                {"from": 3, "to": 1, "distance": 3.0},
+                {"from": 3, "to": 6, "distance": 2.5},
+
+                {"from": 4, "to": 2, "distance": 2.0},
+
+                {"from": 6, "to": 5, "distance": 2.2},
+                {"from": 7, "to": 1, "distance": 3.8},
             ]
 
-            # Example demand matrix
             example_demands = [
-                    [0, 100, 80, 60, 150],
-                    [100, 0, 120, 90, 100],
-                    [80, 120, 0, 110, 100],
-                    [60, 90, 110, 0, 100],
-                    [150, 100, 100, 100, 0]
-
+                [0, 80, 120, 40, 60, 30, 20, 10], # Tunis
+                [80, 0, 60, 30, 20, 50, 40, 25],  # Sfax
+                [120, 60, 0, 50, 40, 25, 15, 8],  # Sousse
+                [40, 30, 50, 0, 15, 20, 30, 15],  # Kairouan
+                [60, 20, 40, 15, 0, 10, 8, 5],    # Bizerte
+                [30, 50, 25, 20, 10, 0, 35, 40],  # Gabès
+                [20, 40, 15, 30, 8, 35, 0, 45],   # Gafsa
+                [10, 25, 8, 15, 5, 40, 45, 0]     # Tozeur
             ]
 
             # Load nodes
