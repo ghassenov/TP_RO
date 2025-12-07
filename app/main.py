@@ -8,14 +8,17 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMessageBox,
                                QTableWidgetItem, QTabWidget, QVBoxLayout,
                                QWidget)
 
+from app.solvers.antenna_solver import AntennaPlacementSolver
 # Solver imports
 from app.solvers.mailbox_solver import MailboxLocationSolver
 from app.solvers.telecom_solver import TelecomNetworkSolver
+from app.ui.antenna_ui import AntennaUI
 # UI imports
 from app.ui.mailbox_ui import MailboxUI
 from app.ui.telecom_ui import TelecomUI
 # Visualization imports
-from shared.visualization import plot_mailbox_solution, plot_telecom_solution
+from shared.visualization import (plot_antenna_solution, plot_mailbox_solution,
+                                  plot_telecom_solution)
 
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -416,18 +419,198 @@ class Main(QMainWindow):
         # Create central widget with tabs
         self.tab_widget = QTabWidget()
 
-        # Mailbox tab
-        self.mailbox_tab = QWidget()
-        self.mailbox_controller = MailboxController(self.mailbox_tab)
-        self.tab_widget.addTab(self.mailbox_tab, "📮 Mailbox Location")
 
-        # Telecom tab
+        # Telecom tab - 6.2
         self.telecom_tab = QWidget()
         self.telecom_controller = TelecomController(self.telecom_tab)
         self.tab_widget.addTab(self.telecom_tab, "📡 Telecom Network")
 
+        # Mailbox tab - 5.3
+        self.mailbox_tab = QWidget()
+        self.mailbox_controller = MailboxController(self.mailbox_tab)
+        self.tab_widget.addTab(self.mailbox_tab, "📮 Mailbox Location")
+
+        # Antenna tab - 4.4
+        self.antenna_tab = QWidget()
+        self.antenna_controller = AntennaController(self.antenna_tab)
+        self.tab_widget.addTab(self.antenna_tab, "📶 Antenna Placement")
+
         self.setCentralWidget(self.tab_widget)
         self.statusBar().showMessage("Ready")
+
+class AntennaController:
+    """Controller for antenna placement module"""
+
+    def __init__(self, parent_widget):
+        self.parent = parent_widget
+
+        # Create UI
+        self.ui = AntennaUI()
+        parent_layout = parent_widget.layout()
+        if parent_layout is None:
+            parent_widget.setLayout(QVBoxLayout())
+            parent_widget.layout().addWidget(self.ui)
+        else:
+            parent_layout.addWidget(self.ui)
+
+        # Setup canvas
+        self.antenna_canvas = MatplotlibCanvas(self.ui.antennaGraphWidget)
+        graph_layout = self.ui.antennaGraphWidget.layout()
+        if graph_layout is None:
+            graph_layout = QVBoxLayout(self.ui.antennaGraphWidget)
+        graph_layout.addWidget(self.antenna_canvas)
+
+        self.setup_connections()
+        self.load_example_data()
+
+    def setup_connections(self):
+        self.ui.btnAddUser.clicked.connect(self.add_user_row)
+        self.ui.btnAddSite.clicked.connect(self.add_site_row)
+        self.ui.btnSolveAntenna.clicked.connect(self.solve_antenna)
+
+    def load_example_data(self):
+        # Create default example data
+        users = [
+            {"x": 1, "y": 1, "demand": 10},
+            {"x": 2, "y": 3, "demand": 15},
+            {"x": 4, "y": 2, "demand": 8},
+            {"x": 3, "y": 5, "demand": 12},
+            {"x": 5, "y": 4, "demand": 20},
+            {"x": 6, "y": 1, "demand": 5},
+            {"x": 2, "y": 6, "demand": 18},
+            {"x": 4, "y": 7, "demand": 10},
+            {"x": 7, "y": 3, "demand": 15},
+            {"x": 8, "y": 5, "demand": 8}
+        ]
+
+        sites = [
+            {"name": "Centre", "x": 2, "y": 2, "cost": 50000},
+            {"name": "Nord", "x": 3, "y": 6, "cost": 55000},
+            {"name": "Est", "x": 4, "y": 4, "cost": 60000},
+            {"name": "Sud", "x": 6, "y": 2, "cost": 52000},
+            {"name": "Nord-Est", "x": 7, "y": 5, "cost": 58000},
+            {"name": "Ouest", "x": 1, "y": 4, "cost": 48000}
+        ]
+
+        # Load users
+        self.ui.tableUsers.setRowCount(len(users))
+        for i, user in enumerate(users):
+            self.ui.tableUsers.setItem(i, 0, QTableWidgetItem(str(user['x'])))
+            self.ui.tableUsers.setItem(i, 1, QTableWidgetItem(str(user['y'])))
+            self.ui.tableUsers.setItem(i, 2, QTableWidgetItem(str(user['demand'])))
+
+        # Load sites
+        self.ui.tableSites.setRowCount(len(sites))
+        for i, site in enumerate(sites):
+            self.ui.tableSites.setItem(i, 0, QTableWidgetItem(site['name']))
+            self.ui.tableSites.setItem(i, 1, QTableWidgetItem(str(site['x'])))
+            self.ui.tableSites.setItem(i, 2, QTableWidgetItem(str(site['y'])))
+            self.ui.tableSites.setItem(i, 3, QTableWidgetItem(str(site['cost'])))
+
+    def add_user_row(self):
+        row = self.ui.tableUsers.rowCount()
+        self.ui.tableUsers.insertRow(row)
+
+    def add_site_row(self):
+        row = self.ui.tableSites.rowCount()
+        self.ui.tableSites.insertRow(row)
+
+    def parse_antenna_data(self):
+        # Parse users
+        users = []
+        for row in range(self.ui.tableUsers.rowCount()):
+            try:
+                x = float(self.ui.tableUsers.item(row, 0).text())
+                y = float(self.ui.tableUsers.item(row, 1).text())
+                demand = float(self.ui.tableUsers.item(row, 2).text() or "1")
+                users.append({"id": row, "x": x, "y": y, "demand": demand})
+            except:
+                users.append({"id": row, "x": 0, "y": 0, "demand": 1})
+
+        # Parse sites
+        candidate_sites = []
+        setup_costs = []
+        for row in range(self.ui.tableSites.rowCount()):
+            try:
+                name = self.ui.tableSites.item(row, 0).text() or f"Site {row}"
+                x = float(self.ui.tableSites.item(row, 1).text())
+                y = float(self.ui.tableSites.item(row, 2).text())
+                cost = float(self.ui.tableSites.item(row, 3).text() or "50000")
+                candidate_sites.append({"id": row, "name": name, "x": x, "y": y})
+                setup_costs.append(cost)
+            except:
+                candidate_sites.append({"id": row, "name": f"Site {row}", "x": 0, "y": 0})
+                setup_costs.append(50000)
+
+        # Parse parameters
+        coverage_radius = float(self.ui.spinCoverageRadius.value())
+        max_antennas = int(self.ui.spinMaxAntennas.value())
+        capacities = [float(x.strip()) for x in self.ui.txtCapacities.text().split(',')]
+
+        return {
+            "users": users,
+            "candidate_sites": candidate_sites,
+            "setup_costs": setup_costs,
+            "capacities": capacities,
+            "coverage_radius": coverage_radius,
+            "max_antennas": max_antennas
+        }
+
+    def solve_antenna(self):
+        try:
+            data = self.parse_antenna_data()
+
+            solver = AntennaPlacementSolver(
+                users=data['users'],
+                candidate_sites=data['candidate_sites'],
+                setup_costs=data['setup_costs'],
+                capacities=data['capacities'],
+                coverage_radius=data['coverage_radius'],
+                max_antennas=data['max_antennas']
+            )
+
+            result = solver.solve()
+            self.display_antenna_results(result)
+            self.plot_antenna_solution(data['users'], result['selected_sites'], data['coverage_radius'])
+
+        except Exception as e:
+            QMessageBox.critical(self.parent, "Error", f"Optimization error: {str(e)}")
+
+    def display_antenna_results(self, result):
+        text = f"""
+<b>RÉSULTATS DU PLACEMENT D'ANTENNES</b>
+<hr>
+<b>Coût Total:</b> {result['objective']:,.0f} €<br>
+<b>Coût Installation:</b> {result['setup_cost']:,.0f} €<br>
+<b>Coût Connexion:</b> {result['connection_cost']:,.0f} €<br><br>
+
+<b>Antennes Installées:</b> {result['num_antennas']}<br>
+<b>Utilisateurs Totaux:</b> {result['total_users']}<br>
+<b>Utilisateurs Couverts:</b> {result['covered_users']} ({result['coverage_rate']*100:.1f}%)<br>
+<b>Capacité Totale:</b> {result['total_capacity']} utilisateurs<br>
+<b>Utilisation Moyenne:</b> {result['avg_utilization']*100:.1f}%<br><br>
+
+<b>DÉTAIL DES ANTENNES:</b><br>
+"""
+
+        for i, site in enumerate(result['selected_sites']):
+            text += f"""
+<b>Antenne {i+1}:</b> {site.get('name', f'Site {i}')}<br>
+• Position: ({site['x']:.1f}, {site['y']:.1f})<br>
+• Capacité: {site.get('capacity', 0)} utilisateurs<br>
+• Utilisateurs affectés: {site.get('num_users', 0)}<br>
+• Utilisation: {site.get('utilization', 0)*100:.1f}%<br>
+• Coût installation: {site.get('setup_cost', 0):,.0f} €<br>
+"""
+
+        self.ui.textAntennaResults.setHtml(text)
+
+    def plot_antenna_solution(self, users, selected_sites, coverage_radius):
+        self.antenna_canvas.figure.clear()
+        fig = plot_antenna_solution(users, selected_sites, coverage_radius)
+        self.antenna_canvas.figure = fig
+        self.antenna_canvas.draw()
+
 
 
 def main():

@@ -230,3 +230,121 @@ def plot_telecom_solution(nodes, selected_links, demands=None):
 
     plt.tight_layout()
     return fig
+
+def plot_antenna_solution(users, selected_sites, coverage_radius):
+    """Visualiser la solution de placement d'antennes"""
+    fig, ax = plt.subplots(figsize=(10, 8), dpi=100)
+
+    # Couleurs - use tuples not strings for RGBA
+    colors = {
+        'users': '#3498db',
+        'covered_users': '#2ecc71',
+        'uncovered_users': '#e74c3c',
+        'sites': '#e74c3c',
+        'selected_sites': '#f39c12',
+        'coverage': (0.95, 0.61, 0.07, 0.1)  # RGBA tuple: (r,g,b,a)
+    }
+
+    # Tracer les utilisateurs
+    user_x = [u['x'] for u in users]
+    user_y = [u['y'] for u in users]
+    user_demands = [u.get('demand', 1) for u in users]
+
+    # Taille proportionnelle à la demande
+    max_demand = max(user_demands) if user_demands else 1
+    user_sizes = [20 + 80 * (d / max_demand) for d in user_demands]
+
+    # Identifier les utilisateurs couverts
+    covered_users = set()
+    for site in selected_sites:
+        if site.get('built', False):
+            site_x, site_y = site['x'], site['y']
+            # Vérifier quels utilisateurs sont dans le rayon
+            for i, user in enumerate(users):
+                distance = ((user['x'] - site_x)**2 + (user['y'] - site_y)**2) ** 0.5
+                if distance <= coverage_radius:
+                    covered_users.add(i)
+
+    # Tracer utilisateurs non couverts
+    uncovered_indices = [i for i in range(len(users)) if i not in covered_users]
+    if uncovered_indices:
+        unc_x = [user_x[i] for i in uncovered_indices]
+        unc_y = [user_y[i] for i in uncovered_indices]
+        unc_sizes = [user_sizes[i] for i in uncovered_indices]
+        ax.scatter(unc_x, unc_y, s=unc_sizes, color=colors['uncovered_users'],
+                  alpha=0.6, label=f'Non Couverts ({len(uncovered_indices)})', zorder=2)
+
+    # Tracer utilisateurs couverts
+    if covered_users:
+        cov_x = [user_x[i] for i in covered_users]
+        cov_y = [user_y[i] for i in covered_users]
+        cov_sizes = [user_sizes[i] for i in covered_users]
+        ax.scatter(cov_x, cov_y, s=cov_sizes, color=colors['covered_users'],
+                  alpha=0.8, label=f'Couverts ({len(covered_users)})', zorder=3)
+
+    # Tracer les sites sélectionnés
+    for site in selected_sites:
+        if site.get('built', False):
+            # Site avec antenne
+            ax.scatter(site['x'], site['y'], s=300, marker='^',
+                      color=colors['selected_sites'], edgecolors='black',
+                      linewidth=2, label='Antenne' if not ax.get_legend() else "", zorder=5)
+
+            # Zone de couverture
+            circle = plt.Circle((site['x'], site['y']), coverage_radius,
+                              fill=True, alpha=0.1, color=colors['selected_sites'])  # Use hex color
+            ax.add_patch(circle)
+
+            # Ligne de couverture
+            circle_edge = plt.Circle((site['x'], site['y']), coverage_radius,
+                                   fill=False, alpha=0.5, color=colors['selected_sites'],
+                                   linestyle='--', linewidth=1)
+            ax.add_patch(circle_edge)
+
+            # Étiquette du site
+            capacity = site.get('capacity', 0)
+            num_users = site.get('num_users', 0)
+            label = f"{site.get('name', f'Site')}\nCap: {capacity}\nUsers: {num_users}"
+
+            ax.annotate(label,
+                       xy=(site['x'], site['y']),
+                       xytext=(0, 15),
+                       textcoords='offset points',
+                       ha='center', va='center',
+                       fontsize=8,
+                       bbox=dict(boxstyle='round,pad=0.3',
+                                facecolor='white',
+                                alpha=0.9,
+                                edgecolor='black'))
+
+            # Lignes vers les utilisateurs affectés
+            for user in site.get('assigned_users', []):
+                ax.plot([site['x'], user['x']], [site['y'], user['y']],
+                       color=colors['selected_sites'], alpha=0.3,
+                       linewidth=1, linestyle='-', zorder=1)
+
+    # Configuration
+    ax.set_xlabel('Position X', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Position Y', fontsize=12, fontweight='bold')
+    ax.set_title('Placement Optimal des Antennes Télécom',
+                fontsize=14, fontweight='bold', pad=20)
+
+    ax.grid(True, alpha=0.3, linestyle='--')
+    ax.set_aspect('equal', adjustable='box')
+
+    # Légende
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', label='Utilisateur Couvert',
+              markerfacecolor=colors['covered_users'], markersize=10),
+        Line2D([0], [0], marker='o', color='w', label='Utilisateur Non Couvert',
+              markerfacecolor=colors['uncovered_users'], markersize=10),
+        Line2D([0], [0], marker='^', color='w', label='Antenne',
+              markerfacecolor=colors['selected_sites'], markersize=12, markeredgecolor='black')
+    ]
+    ax.legend(handles=legend_elements, loc='upper right', framealpha=0.9)
+
+    plt.tight_layout()
+    return fig
+
+

@@ -1,0 +1,28 @@
+{
+    "users": [
+        { "id": 0, "x": 1, "y": 1, "demand": 10 },
+        { "id": 1, "x": 2, "y": 3, "demand": 15 },
+        { "id": 2, "x": 4, "y": 2, "demand": 8 },
+        { "id": 3, "x": 3, "y": 5, "demand": 12 },
+        { "id": 4, "x": 5, "y": 4, "demand": 20 },
+        { "id": 5, "x": 6, "y": 1, "demand": 5 },
+        { "id": 6, "x": 2, "y": 6, "demand": 18 },
+        { "id": 7, "x": 4, "y": 7, "demand": 10 },
+        { "id": 8, "x": 7, "y": 3, "demand": 15 },
+        { "id": 9, "x": 8, "y": 5, "demand": 8 }
+    ],
+
+    "candidate_sites": [
+        { "id": 0, "x": 2, "y": 2, "name": "Site Centre" },
+        { "id": 1, "x": 4, "y": 4, "name": "Site Est" },
+        { "id": 2, "x": 6, "y": 2, "name": "Site Sud-Est" },
+        { "id": 3, "x": 3, "y": 6, "name": "Site Nord" },
+        { "id": 4, "x": 7, "y": 5, "name": "Site Nord-Est" },
+        { "id": 5, "x": 1, "y": 4, "name": "Site Ouest" }
+    ],
+
+    "setup_costs": [50000, 55000, 60000, 52000, 58000, 48000],
+    "capacities": [50, 100, 150, 200],
+    "coverage_radius": 4.0,
+    "max_antennas": 4
+}
