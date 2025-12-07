@@ -1,0 +1,33 @@
+{
+    "nodes": [
+        { "id": 0, "name": "Paris", "x": 0, "y": 0 },
+        { "id": 1, "name": "Lyon", "x": 3, "y": 2 },
+        { "id": 2, "name": "Marseille", "x": 5, "y": -1 },
+        { "id": 3, "name": "Toulouse", "x": 2, "y": -3 },
+        { "id": 4, "name": "Lille", "x": -1, "y": 4 }
+    ],
+
+    "potential_links": [
+        { "from": 0, "to": 1, "distance": 3.6 },
+        { "from": 0, "to": 2, "distance": 5.1 },
+        { "from": 0, "to": 3, "distance": 3.6 },
+        { "from": 0, "to": 4, "distance": 4.1 },
+        { "from": 1, "to": 2, "distance": 3.2 },
+        { "from": 1, "to": 3, "distance": 3.0 },
+        { "from": 1, "to": 4, "distance": 5.0 },
+        { "from": 2, "to": 3, "distance": 3.0 },
+        { "from": 2, "to": 4, "distance": 6.4 },
+        { "from": 3, "to": 4, "distance": 5.8 }
+    ],
+
+    "demands": [
+        [0, 100, 80, 60, 70],
+        [100, 0, 120, 90, 50],
+        [80, 120, 0, 110, 40],
+        [60, 90, 110, 0, 30],
+        [70, 50, 40, 30, 0]
+    ],
+
+    "capacities": [100, 200, 500, 1000],
+    "budget": 50000
+}

@@ -1,0 +1,1 @@
+from modules.subject_telecom_network.model import TelecomNetworkModel

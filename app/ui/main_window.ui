@@ -1,215 +1,215 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-<class>MainWindow</class>
-<widget class="QMainWindow" name="MainWindow">
- <property name="windowTitle">
-  <string>Advanced Mailbox Location Optimizer</string>
- </property>
- <widget class="QWidget" name="centralwidget">
-  <layout class="QHBoxLayout" name="mainLayout">
-   <item>
-    <widget class="QFrame" name="leftPanel">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <layout class="QVBoxLayout" name="leftLayout">
-      <item>
-       <widget class="QLabel" name="titleLabel">
-        <property name="text">
-         <string>Input Parameters</string>
+    <class>MainWindow</class>
+    <widget class="QMainWindow" name="MainWindow">
+        <property name="windowTitle">
+            <string>Advanced Mailbox Location Optimizer</string>
         </property>
-        <property name="font">
-         <font>
-          <bold>true</bold>
-          <weight>75</weight>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="formWidget">
-        <layout class="QFormLayout" name="formLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="lblMailboxes">
-           <property name="text">
-            <string>Number of Mailboxes:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QSpinBox" name="spinMailboxes">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>999</number>
-           </property>
-           <property name="value">
-            <number>3</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="lblRadius">
-           <property name="text">
-            <string>Radius:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="spinRadius">
-           <property name="minimum">
-            <double>0.1</double>
-           </property>
-           <property name="maximum">
-            <double>9999.0</double>
-           </property>
-           <property name="value">
-            <double>2.0</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="lblBudget">
-           <property name="text">
-            <string>Budget:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="spinBudget">
-           <property name="minimum">
-            <double>0.0</double>
-           </property>
-           <property name="maximum">
-            <double>1000000.0</double>
-           </property>
-           <property name="value">
-            <double>1000.0</double>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="lblCoverageLevel">
-           <property name="text">
-            <string>Max Coverage Level:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QSpinBox" name="spinCoverageLevel">
-           <property name="minimum">
-            <number>1</number>
-           </property>
-           <property name="maximum">
-            <number>10</number>
-           </property>
-           <property name="value">
-            <number>1</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblDemand">
-        <property name="text">
-         <string>Demand Points (x, y, population, demand, priority)</string>
-        </property>
-        <property name="font">
-         <font>
-          <bold>true</bold>
-          <weight>75</weight>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="tableDemand"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblMailboxParams">
-        <property name="text">
-         <string>Mailbox Parameters (cost, capacity, fixed cost)</string>
-        </property>
-        <property name="font">
-         <font>
-          <bold>true</bold>
-          <weight>75</weight>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="tableMailboxParams"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnAddDemand">
-        <property name="text">
-         <string>Add Demand Point</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnAddMailboxParams">
-        <property name="text">
-         <string>Add Mailbox Parameter Row</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnSolve">
-        <property name="text">
-         <string>Solve</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="status">
-        <property name="text">
-         <string>Status: Ready</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+        <widget class="QWidget" name="centralwidget">
+            <layout class="QHBoxLayout" name="mainLayout">
+                <item>
+                    <widget class="QFrame" name="leftPanel">
+                        <property name="frameShape">
+                            <enum>QFrame::StyledPanel</enum>
+                        </property>
+                        <layout class="QVBoxLayout" name="leftLayout">
+                            <item>
+                                <widget class="QLabel" name="titleLabel">
+                                    <property name="text">
+                                        <string>Input Parameters</string>
+                                    </property>
+                                    <property name="font">
+                                        <font>
+                                            <bold>true</bold>
+                                            <weight>75</weight>
+                                        </font>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QWidget" name="formWidget">
+                                    <layout class="QFormLayout" name="formLayout">
+                                        <item row="0" column="0">
+                                            <widget class="QLabel" name="lblMailboxes">
+                                                <property name="text">
+                                                    <string>Number of Mailboxes:</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="0" column="1">
+                                            <widget class="QSpinBox" name="spinMailboxes">
+                                                <property name="minimum">
+                                                    <number>1</number>
+                                                </property>
+                                                <property name="maximum">
+                                                    <number>999</number>
+                                                </property>
+                                                <property name="value">
+                                                    <number>3</number>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="1" column="0">
+                                            <widget class="QLabel" name="lblRadius">
+                                                <property name="text">
+                                                    <string>Radius:</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="1" column="1">
+                                            <widget class="QDoubleSpinBox" name="spinRadius">
+                                                <property name="minimum">
+                                                    <double>0.1</double>
+                                                </property>
+                                                <property name="maximum">
+                                                    <double>9999.0</double>
+                                                </property>
+                                                <property name="value">
+                                                    <double>2.0</double>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="2" column="0">
+                                            <widget class="QLabel" name="lblBudget">
+                                                <property name="text">
+                                                    <string>Budget:</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="2" column="1">
+                                            <widget class="QDoubleSpinBox" name="spinBudget">
+                                                <property name="minimum">
+                                                    <double>0.0</double>
+                                                </property>
+                                                <property name="maximum">
+                                                    <double>1000000.0</double>
+                                                </property>
+                                                <property name="value">
+                                                    <double>1000.0</double>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="3" column="0">
+                                            <widget class="QLabel" name="lblCoverageLevel">
+                                                <property name="text">
+                                                    <string>Max Coverage Level:</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                        <item row="3" column="1">
+                                            <widget class="QSpinBox" name="spinCoverageLevel">
+                                                <property name="minimum">
+                                                    <number>1</number>
+                                                </property>
+                                                <property name="maximum">
+                                                    <number>10</number>
+                                                </property>
+                                                <property name="value">
+                                                    <number>1</number>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QLabel" name="lblDemand">
+                                    <property name="text">
+                                        <string>Demand Points (x, y, population, demand, priority)</string>
+                                    </property>
+                                    <property name="font">
+                                        <font>
+                                            <bold>true</bold>
+                                            <weight>75</weight>
+                                        </font>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QTableWidget" name="tableDemand" />
+                            </item>
+                            <item>
+                                <widget class="QLabel" name="lblMailboxParams">
+                                    <property name="text">
+                                        <string>Mailbox Parameters (cost, capacity, fixed cost)</string>
+                                    </property>
+                                    <property name="font">
+                                        <font>
+                                            <bold>true</bold>
+                                            <weight>75</weight>
+                                        </font>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QTableWidget" name="tableMailboxParams" />
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="btnAddDemand">
+                                    <property name="text">
+                                        <string>Add Demand Point</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="btnAddMailboxParams">
+                                    <property name="text">
+                                        <string>Add Mailbox Parameter Row</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="btnSolve">
+                                    <property name="text">
+                                        <string>Solve</string>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QLabel" name="status">
+                                    <property name="text">
+                                        <string>Status: Ready</string>
+                                    </property>
+                                </widget>
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+                <item>
+                    <widget class="QFrame" name="rightPanel">
+                        <property name="frameShape">
+                            <enum>QFrame::StyledPanel</enum>
+                        </property>
+                        <layout class="QVBoxLayout" name="rightLayout">
+                            <item>
+                                <widget class="QLabel" name="lblResults">
+                                    <property name="text">
+                                        <string>Results</string>
+                                    </property>
+                                    <property name="font">
+                                        <font>
+                                            <bold>true</bold>
+                                            <weight>75</weight>
+                                        </font>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QTextEdit" name="textResults">
+                                    <property name="readOnly">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QWidget" name="graphWidget" />
+                            </item>
+                        </layout>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
     </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="rightPanel">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <layout class="QVBoxLayout" name="rightLayout">
-      <item>
-       <widget class="QLabel" name="lblResults">
-        <property name="text">
-         <string>Results</string>
-        </property>
-        <property name="font">
-         <font>
-          <bold>true</bold>
-          <weight>75</weight>
-         </font>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTextEdit" name="textResults">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QWidget" name="graphWidget"/>
-      </item>
-     </layout>
-    </widget>
-   </item>
-  </layout>
- </widget>
-</widget>
-<resources/>
-<connections/>
+    <resources />
+    <connections />
 </ui>
