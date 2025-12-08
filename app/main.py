@@ -3,10 +3,11 @@ import sys
 # Matplotlib
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QApplication, QMainWindow, QMessageBox,
-                               QTableWidgetItem, QTabWidget, QVBoxLayout,
-                               QWidget)
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (QApplication, QLabel, QMainWindow, QMessageBox,
+                               QProgressBar, QTableWidgetItem, QTabWidget,
+                               QVBoxLayout, QWidget)
 
 from app.solvers.antenna_solver import AntennaPlacementSolver
 # Solver imports
@@ -408,42 +409,6 @@ class TelecomController:
         self.telecom_canvas.figure = fig
         self.telecom_canvas.draw()
 
-
-class Main(QMainWindow):
-    """Main application window with tabbed interface"""
-
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("Optimization Suite - Mailbox, Telecom, Antenna & MIS")
-        self.setGeometry(100, 100, 1400, 800)
-
-        # Create central widget with tabs
-        self.tab_widget = QTabWidget()
-
-        # MIS tab - 14.1
-        self.mis_tab = QWidget()
-        self.mis_controller = MISController(self.mis_tab)
-        self.tab_widget.addTab(self.mis_tab, "📊 MIS Scheduling")
-
-        # Telecom tab - 6.2
-        self.telecom_tab = QWidget()
-        self.telecom_controller = TelecomController(self.telecom_tab)
-        self.tab_widget.addTab(self.telecom_tab, "📡 Telecom Network")
-
-        # Mailbox tab - 5.3
-        self.mailbox_tab = QWidget()
-        self.mailbox_controller = MailboxController(self.mailbox_tab)
-        self.tab_widget.addTab(self.mailbox_tab, "📮 Mailbox Location")
-
-        # Antenna tab - 4.4
-        self.antenna_tab = QWidget()
-        self.antenna_controller = AntennaController(self.antenna_tab)
-        self.tab_widget.addTab(self.antenna_tab, "📶 Antenna Placement")
-
-        self.setCentralWidget(self.tab_widget)
-        self.statusBar().showMessage("Ready")
-
 class AntennaController:
     """Controller for antenna placement module"""
 
@@ -814,14 +779,135 @@ class MISController:
         self.mis_canvas.draw()
 
 
+from app.styles import STYLESHEET
+# Add at the top
+from app.theme import Theme
+
 
 def main():
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')
+
+    # Apply theme
+    Theme.setup_light_theme(app)  # or Theme.setup_dark_theme(app)
+    app.setStyleSheet(STYLESHEET)
+
+    # Set application icon
+    app.setWindowIcon(QIcon("app/ui/icon.png"))  # Add an icon
+
+    # Create and show main window
     window = Main()
+
+    # Center window on screen
+    screen_geometry = app.primaryScreen().availableGeometry()
+    window_size = window.size()
+    window.move(
+        (screen_geometry.width() - window_size.width()) // 2,
+        (screen_geometry.height() - window_size.height()) // 2
+    )
+
     window.show()
     sys.exit(app.exec())
 
+class Main(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Optimization Suite v2.0 - Operations Research Tools")
+        self.setGeometry(100, 100, 1600, 900)  # Larger window
+
+        # Create central widget with tabs
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setTabPosition(QTabWidget.North)
+        self.tab_widget.setMovable(True)
+
+        # Add tabs with custom properties
+
+        # 14.1 - MIS Scheduling Tab
+        self.mis_tab = QWidget()
+        self.mis_controller = MISController(self.mis_tab)
+        self.tab_widget.addTab(self.mis_tab, "📊 MIS Scheduling")
+
+        # 6.2 - Telecom Network Tab
+        self.telecom_tab = QWidget()
+        self.telecom_controller = TelecomController(self.telecom_tab)
+        self.tab_widget.addTab(self.telecom_tab, "📡 Telecom")
+
+        # 5.3 - Mailbox Location Tab
+        self.mailbox_tab = QWidget()
+        self.mailbox_controller = MailboxController(self.mailbox_tab)
+        self.tab_widget.addTab(self.mailbox_tab, "📮 Mailbox")
+
+        # 4.4 - Antenna Placement Tab
+        self.antenna_tab = QWidget()
+        self.antenna_controller = AntennaController(self.antenna_tab)
+        self.tab_widget.addTab(self.antenna_tab, "📶 Antenna")
+
+
+        self.setCentralWidget(self.tab_widget)
+
+        # Create status bar with widgets
+        self.status_bar = self.statusBar()
+        self.status_bar.showMessage("Ready - Optimization Suite v2.0")
+
+        # Add progress bar to status bar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximumWidth(200)
+        self.progress_bar.setVisible(False)
+        self.status_bar.addPermanentWidget(self.progress_bar)
+
+        # Add memory usage label
+        self.memory_label = QLabel("Memory: --")
+        self.status_bar.addPermanentWidget(self.memory_label)
+
+        # Create menu bar
+        self.create_menu_bar()
+
+        # Timer for updating status
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_status)
+        self.timer.start(5000)
+
+    def create_menu_bar(self):
+        menubar = self.menuBar()
+
+        # View menu
+        view_menu = menubar.addMenu("👁️ View")
+
+        theme_menu = view_menu.addMenu("Theme")
+        light_action = QAction("Light Theme", self)
+        dark_action = QAction("Dark Theme", self)
+        theme_menu.addAction(light_action)
+        theme_menu.addAction(dark_action)
+        dark_action.triggered.connect(
+                lambda: Theme.setup_dark_theme(QApplication.instance())
+                )
+        light_action.triggered.connect(
+                lambda: Theme.setup_light_theme(QApplication.instance())
+                )
+
+        # Help menu
+        help_menu = menubar.addMenu("❓ Help")
+
+        about_action = QAction("About", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+
+    def update_status(self):
+        # Update memory usage
+        import psutil
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
+
+    def show_about(self):
+        QMessageBox.about(self, "About Optimization Suite",
+            "<h2>Optimization Suite v2.0</h2>"
+            "<p><b>Advanced Operations Research Tools</b></p>"
+            "<p>Developed for academic project</p>"
+            "<p>Modules: Mailbox Location, Telecom Network, "
+            "Antenna Placement, MIS Scheduling</p>"
+            "<p>Using: PySide6, Gurobi, Matplotlib</p>"
+            "<p>© 2024 - All rights reserved</p>")
 
 if __name__ == "__main__":
     main()
