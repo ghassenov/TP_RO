@@ -1,0 +1,71 @@
+{
+    "tasks": [
+        {
+            "id": 0,
+            "name": "Traitement données",
+            "duration": 10,
+            "priority": 3,
+            "resource": "CPU"
+        },
+        {
+            "id": 1,
+            "name": "Sauvegarde BD",
+            "duration": 5,
+            "priority": 2,
+            "resource": "Disk"
+        },
+        {
+            "id": 2,
+            "name": "Analyse images",
+            "duration": 15,
+            "priority": 4,
+            "resource": "GPU"
+        },
+        {
+            "id": 3,
+            "name": "Envoi emails",
+            "duration": 2,
+            "priority": 1,
+            "resource": "Network"
+        },
+        {
+            "id": 4,
+            "name": "Calcul scientifique",
+            "duration": 20,
+            "priority": 5,
+            "resource": "CPU"
+        },
+        {
+            "id": 5,
+            "name": "Synthèse rapport",
+            "duration": 8,
+            "priority": 2,
+            "resource": "Memory"
+        },
+        {
+            "id": 6,
+            "name": "Entraînement ML",
+            "duration": 30,
+            "priority": 4,
+            "resource": "GPU"
+        },
+        {
+            "id": 7,
+            "name": "Vérification sécurité",
+            "duration": 3,
+            "priority": 3,
+            "resource": "CPU"
+        }
+    ],
+
+    "conflicts": [
+        [0, 4],
+        [0, 7],
+        [4, 7],
+        [2, 6],
+        [0, 5],
+        [4, 5],
+        [1, 3],
+        [3, 6]
+    ]
+}

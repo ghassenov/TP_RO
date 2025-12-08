@@ -11,14 +11,16 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMessageBox,
 from app.solvers.antenna_solver import AntennaPlacementSolver
 # Solver imports
 from app.solvers.mailbox_solver import MailboxLocationSolver
+from app.solvers.mis_solver import MISSolver
 from app.solvers.telecom_solver import TelecomNetworkSolver
 from app.ui.antenna_ui import AntennaUI
 # UI imports
 from app.ui.mailbox_ui import MailboxUI
+from app.ui.mis_ui import MISUI
 from app.ui.telecom_ui import TelecomUI
 # Visualization imports
 from shared.visualization import (plot_antenna_solution, plot_mailbox_solution,
-                                  plot_telecom_solution)
+                                  plot_mis_solution, plot_telecom_solution)
 
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -413,12 +415,16 @@ class Main(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Optimization Suite - Mailbox & Telecom Network")
+        self.setWindowTitle("Optimization Suite - Mailbox, Telecom, Antenna & MIS")
         self.setGeometry(100, 100, 1400, 800)
 
         # Create central widget with tabs
         self.tab_widget = QTabWidget()
 
+        # MIS tab - 14.1
+        self.mis_tab = QWidget()
+        self.mis_controller = MISController(self.mis_tab)
+        self.tab_widget.addTab(self.mis_tab, "📊 MIS Scheduling")
 
         # Telecom tab - 6.2
         self.telecom_tab = QWidget()
@@ -610,6 +616,202 @@ class AntennaController:
         fig = plot_antenna_solution(users, selected_sites, coverage_radius)
         self.antenna_canvas.figure = fig
         self.antenna_canvas.draw()
+
+
+class MISController:
+    """Controller for Maximum Independent Set module"""
+
+    def __init__(self, parent_widget):
+        self.parent = parent_widget
+
+        # Create UI
+        self.ui = MISUI()
+        parent_layout = parent_widget.layout()
+        if parent_layout is None:
+            parent_widget.setLayout(QVBoxLayout())
+            parent_widget.layout().addWidget(self.ui)
+        else:
+            parent_layout.addWidget(self.ui)
+
+        # Setup canvas
+        self.mis_canvas = MatplotlibCanvas(self.ui.misGraphWidget)
+        graph_layout = self.ui.misGraphWidget.layout()
+        if graph_layout is None:
+            graph_layout = QVBoxLayout(self.ui.misGraphWidget)
+        graph_layout.addWidget(self.mis_canvas)
+
+        self.setup_connections()
+        self.load_example_data()
+
+    def setup_connections(self):
+        self.ui.btnAddTask.clicked.connect(self.add_task_row)
+        self.ui.btnAddConflict.clicked.connect(self.add_conflict_row)
+        self.ui.btnAutoDetect.clicked.connect(self.auto_detect_conflicts)
+        self.ui.btnSolveMIS.clicked.connect(self.solve_mis)
+
+    def load_example_data(self):
+        # Example tasks
+        tasks = [
+            {"name": "Traitement données", "duration": 10, "priority": 3, "resource": "CPU"},
+            {"name": "Sauvegarde BD", "duration": 5, "priority": 2, "resource": "Disk"},
+            {"name": "Analyse images", "duration": 15, "priority": 4, "resource": "GPU"},
+            {"name": "Envoi emails", "duration": 2, "priority": 1, "resource": "Network"},
+            {"name": "Calcul scientifique", "duration": 20, "priority": 5, "resource": "CPU"},
+            {"name": "Synthèse rapport", "duration": 8, "priority": 2, "resource": "Memory"},
+            {"name": "Entraînement ML", "duration": 30, "priority": 4, "resource": "GPU"},
+            {"name": "Vérification sécurité", "duration": 3, "priority": 3, "resource": "CPU"}
+        ]
+
+        # Example conflicts
+        conflicts = [
+            [0, 4], [0, 7], [4, 7], [2, 6],
+            [0, 5], [4, 5], [1, 3], [3, 6]
+        ]
+
+        # Load tasks
+        self.ui.tableTasks.setRowCount(len(tasks))
+        for i, task in enumerate(tasks):
+            self.ui.tableTasks.setItem(i, 0, QTableWidgetItem(task['name']))
+            self.ui.tableTasks.setItem(i, 1, QTableWidgetItem(str(task['duration'])))
+            self.ui.tableTasks.setItem(i, 2, QTableWidgetItem(str(task['priority'])))
+            self.ui.tableTasks.setItem(i, 3, QTableWidgetItem(task['resource']))
+
+        # Load conflicts
+        self.ui.tableConflicts.setRowCount(len(conflicts))
+        for i, conflict in enumerate(conflicts):
+            self.ui.tableConflicts.setItem(i, 0, QTableWidgetItem(str(conflict[0])))
+            self.ui.tableConflicts.setItem(i, 1, QTableWidgetItem(str(conflict[1])))
+
+    def add_task_row(self):
+        row = self.ui.tableTasks.rowCount()
+        self.ui.tableTasks.insertRow(row)
+
+    def add_conflict_row(self):
+        row = self.ui.tableConflicts.rowCount()
+        self.ui.tableConflicts.insertRow(row)
+
+    def auto_detect_conflicts(self):
+        """Détecter automatiquement les conflits basés sur les ressources"""
+        num_tasks = self.ui.tableTasks.rowCount()
+
+        # Collecter les ressources par tâche
+        resources = []
+        for i in range(num_tasks):
+            resource_item = self.ui.tableTasks.item(i, 3)
+            if resource_item:
+                resources.append(resource_item.text().strip())
+            else:
+                resources.append("")
+
+        # Trouver les conflits (tâches partageant la même ressource)
+        conflicts = []
+        for i in range(num_tasks):
+            for j in range(i + 1, num_tasks):
+                if resources[i] and resources[i] == resources[j]:
+                    conflicts.append([i, j])
+
+        # Afficher les conflits détectés
+        self.ui.tableConflicts.setRowCount(len(conflicts))
+        for idx, conflict in enumerate(conflicts):
+            self.ui.tableConflicts.setItem(idx, 0, QTableWidgetItem(str(conflict[0])))
+            self.ui.tableConflicts.setItem(idx, 1, QTableWidgetItem(str(conflict[1])))
+
+    def parse_mis_data(self):
+        # Parse tasks
+        tasks = []
+        for row in range(self.ui.tableTasks.rowCount()):
+            try:
+                name = self.ui.tableTasks.item(row, 0).text() or f"Tâche {row}"
+                duration = int(self.ui.tableTasks.item(row, 1).text() or "1")
+                priority = int(self.ui.tableTasks.item(row, 2).text() or "1")
+                resource = self.ui.tableTasks.item(row, 3).text() or ""
+                tasks.append({
+                    "id": row,
+                    "name": name,
+                    "duration": duration,
+                    "priority": priority,
+                    "resource": resource
+                })
+            except:
+                tasks.append({
+                    "id": row,
+                    "name": f"Tâche {row}",
+                    "duration": 1,
+                    "priority": 1,
+                    "resource": ""
+                })
+
+        # Parse conflicts
+        conflicts = []
+        for row in range(self.ui.tableConflicts.rowCount()):
+            try:
+                task1 = int(self.ui.tableConflicts.item(row, 0).text())
+                task2 = int(self.ui.tableConflicts.item(row, 1).text())
+                if 0 <= task1 < len(tasks) and 0 <= task2 < len(tasks):
+                    conflicts.append([task1, task2])
+            except:
+                continue
+
+        return {
+            "tasks": tasks,
+            "conflicts": conflicts,
+            "use_weights": self.ui.chkUseWeights.isChecked()
+        }
+
+    def solve_mis(self):
+        try:
+            data = self.parse_mis_data()
+
+            # Utiliser les priorités comme poids si demandé
+            weights = None
+            if data['use_weights']:
+                weights = [task['priority'] for task in data['tasks']]
+
+            solver = MISSolver(
+                tasks=data['tasks'],
+                conflicts=data['conflicts'],
+                weights=weights
+            )
+
+            result = solver.solve()
+            self.display_mis_results(result)
+            self.plot_mis_solution(data['tasks'], data['conflicts'], result['selected_tasks'])
+
+        except Exception as e:
+            QMessageBox.critical(self.parent, "Error", f"Optimization error: {str(e)}")
+
+    def display_mis_results(self, result):
+        objective_type = "somme des priorités" if self.ui.chkUseWeights.isChecked() else "nombre de tâches"
+
+        text = f"""
+<b>RÉSULTATS DE L'ENSEMBLE INDÉPENDANT MAXIMUM</b>
+<hr>
+<b>Valeur objective ({objective_type}):</b> {result['objective']}<br>
+<b>Tâches sélectionnées:</b> {result['total_tasks']}/{result['total_possible_tasks']} ({result['selection_ratio']*100:.1f}%)<br>
+<b>Validité:</b> {"✓ Oui" if result['is_valid'] else "✗ Non"}<br><br>
+
+<b>TÂCHES SÉLECTIONNÉES:</b><br>
+"""
+
+        for i, task in enumerate(result['selected_tasks']):
+            text += f"""
+<b>Tâche {i+1}:</b> {task['name']}<br>
+• ID: {task['id']}<br>
+• Durée: {task.get('duration', 0)}<br>
+• Priorité: {task.get('priority', 1)}<br>
+• Ressource: {task.get('resource', 'N/A')}<br>
+• Conflits: {task.get('num_conflicts', 0)} autres tâches<br>
+"""
+
+        text += f"<br><b>Note:</b> {result.get('status', '')} {result.get('note', '')}"
+
+        self.ui.textMISResults.setHtml(text)
+
+    def plot_mis_solution(self, tasks, conflicts, selected_tasks):
+        self.mis_canvas.figure.clear()
+        fig = plot_mis_solution(tasks, conflicts, selected_tasks)
+        self.mis_canvas.figure = fig
+        self.mis_canvas.draw()
 
 
 

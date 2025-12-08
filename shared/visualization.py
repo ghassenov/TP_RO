@@ -348,3 +348,82 @@ def plot_antenna_solution(users, selected_sites, coverage_radius):
     return fig
 
 
+import matplotlib.pyplot as plt
+import networkx as nx
+
+
+def plot_mis_solution(tasks, conflicts, selected_tasks):
+    """Visualiser la solution de l'Ensemble Indépendant Maximum"""
+    fig, ax = plt.subplots(figsize=(10, 8), dpi=100)
+
+    # Créer le graphe
+    G = nx.Graph()
+
+    # Ajouter les nœuds (tâches)
+    for task in tasks:
+        G.add_node(task['id'],
+                   label=task.get('name', f"T{task['id']}"),
+                   duration=task.get('duration', 1),
+                   priority=task.get('priority', 1),
+                   selected=any(t['id'] == task['id'] for t in selected_tasks))
+
+    # Ajouter les arêtes (conflits)
+    for i, j in conflicts:
+        if i < len(tasks) and j < len(tasks):
+            G.add_edge(i, j)
+
+    # Positions des nœuds (layout circulaire)
+    pos = nx.circular_layout(G)
+
+    # Couleurs
+    colors = {
+        'selected': '#2ecc71',    # Vert pour les tâches sélectionnées
+        'unselected': '#e74c3c',  # Rouge pour les autres
+        'conflict': '#7f8c8d',    # Gris pour les arêtes
+        'highlight': '#f39c12'    # Orange pour mettre en évidence
+    }
+
+    # Tracer les arêtes (conflits)
+    nx.draw_networkx_edges(G, pos, alpha=0.3, width=1, edge_color=colors['conflict'])
+
+    # Tracer les nœuds non sélectionnés
+    unselected_nodes = [node for node in G.nodes() if not G.nodes[node]['selected']]
+    if unselected_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=unselected_nodes,
+                              node_color=colors['unselected'],
+                              node_size=700, alpha=0.7)
+
+    # Tracer les nœuds sélectionnés (plus grands)
+    selected_nodes = [node for node in G.nodes() if G.nodes[node]['selected']]
+    if selected_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=selected_nodes,
+                              node_color=colors['selected'],
+                              node_size=1000, alpha=0.9,
+                              edgecolors='black', linewidths=2)
+
+    # Étiquettes des nœuds
+    labels = {}
+    for node in G.nodes():
+        task_data = G.nodes[node]
+        labels[node] = f"{task_data['label']}\nP:{task_data['priority']}"
+
+    nx.draw_networkx_labels(G, pos, labels, font_size=9, font_weight='bold')
+
+    # Titre et légende
+    ax.set_title("Graphe d'Incompatibilité - Ensemble Indépendant Maximum",
+                fontsize=14, fontweight='bold', pad=20)
+
+    # Légende
+    from matplotlib.patches import Circle
+    legend_elements = [
+        Circle((0, 0), 1, color=colors['selected'], label='Tâche sélectionnée'),
+        Circle((0, 0), 1, color=colors['unselected'], label='Tâche non sélectionnée'),
+        plt.Line2D([0], [0], color=colors['conflict'], lw=2, label='Conflit')
+    ]
+    ax.legend(handles=legend_elements, loc='upper right', framealpha=0.9)
+
+    ax.axis('off')
+    plt.tight_layout()
+
+    return fig
+
