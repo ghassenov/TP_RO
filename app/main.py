@@ -892,12 +892,32 @@ class Main(QMainWindow):
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
-    def update_status(self):
-        # Update memory usage
-        import psutil
-        process = psutil.Process()
-        memory_mb = process.memory_info().rss / 1024 / 1024
-        self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
+    def update_status(self, message, is_error=False):
+        """Update status bar with colored message"""
+        if is_error:
+            self.status_bar.showMessage(f"❌ {message}", 5000)
+            self.status_bar.setStyleSheet("""
+                QStatusBar {
+                    background-color: #ffebee;
+                    color: #c62828;
+                    font-weight: bold;
+                }
+            """)
+            QTimer.singleShot(5000, self.reset_status_style)
+        else:
+            self.status_bar.showMessage(f"✅ {message}", 3000)
+            self.status_bar.setStyleSheet("""
+                QStatusBar {
+                    background-color: #e8f5e9;
+                    color: #2e7d32;
+                }
+            """)
+            QTimer.singleShot(3000, self.reset_status_style)
+
+    def reset_status_style(self):
+        """Reset status bar to default style"""
+        self.status_bar.setStyleSheet("")
+
 
     def show_about(self):
         QMessageBox.about(self, "About Optimization Suite",
