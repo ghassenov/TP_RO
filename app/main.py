@@ -17,6 +17,7 @@ from app.solvers.mis_solver import MISSolver
 from app.solvers.telecom_solver import TelecomNetworkSolver
 from app.solvers.triangulation_solver import AppTriangulationSolver
 from app.ui.antenna_ui import AntennaUI
+from app.ui.introduction_ui import IntroductionController, IntroductionTab
 # UI imports
 from app.ui.mailbox_ui import MailboxUI
 from app.ui.mis_ui import MISUI
@@ -1057,6 +1058,7 @@ class TriangulationController:
             print(f"Error plotting: {e}")
 
 
+
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1069,7 +1071,11 @@ class Main(QMainWindow):
         self.tab_widget.setTabPosition(QTabWidget.North)
         self.tab_widget.setMovable(True)
 
-        # Add tabs with custom properties
+
+        # introduction tab
+        self.intro_tab = QWidget()
+        self.intro_controller = IntroductionController(self.intro_tab)
+        self.tab_widget.addTab(self.intro_tab, "🏠 Home")
 
         # 14.1 - MIS Scheduling Tab
         self.mis_tab = QWidget()
