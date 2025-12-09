@@ -427,3 +427,61 @@ def plot_mis_solution(tasks, conflicts, selected_tasks):
 
     return fig
 
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
+
+
+def plot_triangulation_solution(points, selected_triangles, title="Truss Structure"):
+    """
+    Simple triangulation plot
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Plot points
+    if points:
+        x_coords = [p['x'] for p in points]
+        y_coords = [p['y'] for p in points]
+        ax.scatter(x_coords, y_coords, c='blue', s=100, zorder=5, label='Points')
+
+        # Add point labels
+        for i, p in enumerate(points):
+            ax.annotate(str(i), (p['x'], p['y']),
+                       xytext=(5, 5), textcoords='offset points',
+                       fontsize=9, fontweight='bold')
+
+    # Plot selected triangles
+    if selected_triangles:
+        for tri in selected_triangles:
+            vertices = tri['vertices']
+            if len(vertices) == 3:
+                # Get point coordinates
+                tri_points = []
+                for v in vertices:
+                    if v < len(points):
+                        tri_points.append([points[v]['x'], points[v]['y']])
+
+                if len(tri_points) == 3:
+                    tri_points.append(tri_points[0])  # Close the triangle
+                    x_vals = [p[0] for p in tri_points]
+                    y_vals = [p[1] for p in tri_points]
+
+                    # Plot triangle with color based on cost
+                    cost = tri.get('cost', 1.0)
+                    alpha = 0.3 + 0.4 * (cost / max(1.0, cost))
+                    ax.fill(x_vals, y_vals, alpha=alpha, edgecolor='red',
+                           linewidth=2, label=f'Cost: {cost:.1f}')
+
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.set_aspect('equal')
+
+    plt.tight_layout()
+    return fig

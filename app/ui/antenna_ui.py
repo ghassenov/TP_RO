@@ -139,7 +139,6 @@ class AntennaUI(QWidget):
             QCheckBox::indicator:checked {
                 background-color: #9b59b6;
                 border-color: #8e44ad;
-                image: url(:/icons/check.svg);
             }
             QCheckBox::indicator:hover {
                 border-color: #9b59b6;

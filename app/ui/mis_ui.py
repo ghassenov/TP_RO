@@ -155,7 +155,6 @@ class MISUI(QWidget):
             QCheckBox::indicator:checked {
                 background-color: #e67e22;
                 border-color: #d35400;
-                image: url(:/icons/check.svg);
             }
             QCheckBox::indicator:hover {
                 border-color: #e67e22;

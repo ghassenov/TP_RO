@@ -9,19 +9,23 @@ from PySide6.QtWidgets import (QApplication, QLabel, QMainWindow, QMessageBox,
                                QProgressBar, QTableWidgetItem, QTabWidget,
                                QVBoxLayout, QWidget)
 
-from app.solvers.antenna_solver import AntennaPlacementSolver
+from app.models.triangulation_model import TriangulationModel
 # Solver imports
+from app.solvers.antenna_solver import AntennaPlacementSolver
 from app.solvers.mailbox_solver import MailboxLocationSolver
 from app.solvers.mis_solver import MISSolver
 from app.solvers.telecom_solver import TelecomNetworkSolver
+from app.solvers.triangulation_solver import AppTriangulationSolver
 from app.ui.antenna_ui import AntennaUI
 # UI imports
 from app.ui.mailbox_ui import MailboxUI
 from app.ui.mis_ui import MISUI
 from app.ui.telecom_ui import TelecomUI
+from modules.subject_triangulation.model import Triangle
 # Visualization imports
 from shared.visualization import (plot_antenna_solution, plot_mailbox_solution,
-                                  plot_mis_solution, plot_telecom_solution)
+                                  plot_mis_solution, plot_telecom_solution,
+                                  plot_triangulation_solution)
 
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -808,6 +812,251 @@ def main():
     window.show()
     sys.exit(app.exec())
 
+from app.ui.triangulation_ui import TriangulationUI  # Use the new UI
+from modules.subject_triangulation.model import TrussStructure
+from modules.subject_triangulation.solver import SimpleTriangulationSolver
+
+
+class TriangulationController:
+    """Controller for triangle decomposition - Clean layout"""
+
+    def __init__(self, parent_widget):
+        self.parent = parent_widget
+
+        # Create UI
+        self.ui = TriangulationUI()
+        parent_widget.setLayout(QVBoxLayout())
+        parent_widget.layout().addWidget(self.ui)
+
+        # Setup connections
+        self.ui.btnAddPoint.clicked.connect(self.add_point)
+        self.ui.btnAddTriangle.clicked.connect(self.add_triangle)
+        self.ui.btnSolve.clicked.connect(self.solve)
+
+        # Setup matplotlib canvas
+        self.canvas = MatplotlibCanvas(self.ui.graphWidget)
+        graph_layout = self.ui.graphWidget.layout()
+        if graph_layout is None:
+            graph_layout = QVBoxLayout(self.ui.graphWidget)
+        graph_layout.addWidget(self.canvas)
+
+        # Initialize structure
+        self.structure = TrussStructure()
+        self.ui.update_status("Ready - Loaded example data")
+
+    def add_point(self):
+        """Add a new point row"""
+        row = self.ui.tablePoints.rowCount()
+        self.ui.tablePoints.insertRow(row)
+        # Set default ID
+        self.ui.tablePoints.setItem(row, 0, QTableWidgetItem(str(row)))
+        self.ui.update_status(f"Added point row {row}")
+
+    def add_triangle(self):
+        """Add a new triangle row"""
+        row = self.ui.tableTriangles.rowCount()
+        self.ui.tableTriangles.insertRow(row)
+        self.ui.update_status(f"Added triangle row {row}")
+
+    def parse_input_data(self):
+        """Parse data from UI tables"""
+        # Parse points
+        points = []
+        for row in range(self.ui.tablePoints.rowCount()):
+            try:
+                x_item = self.ui.tablePoints.item(row, 1)
+                y_item = self.ui.tablePoints.item(row, 2)
+
+                if x_item and y_item and x_item.text() and y_item.text():
+                    x = float(x_item.text())
+                    y = float(y_item.text())
+                    points.append({
+                        'id': row,
+                        'x': x,
+                        'y': y
+                    })
+            except:
+                continue
+
+        # Parse triangles
+        triangles = []
+        for row in range(self.ui.tableTriangles.rowCount()):
+            try:
+                p1_item = self.ui.tableTriangles.item(row, 0)
+                p2_item = self.ui.tableTriangles.item(row, 1)
+                p3_item = self.ui.tableTriangles.item(row, 2)
+                cost_item = self.ui.tableTriangles.item(row, 3)
+
+                if p1_item and p2_item and p3_item:
+                    p1 = int(p1_item.text() or "0")
+                    p2 = int(p2_item.text() or "1")
+                    p3 = int(p3_item.text() or "2")
+                    cost = float(cost_item.text()) if cost_item and cost_item.text() else 1.0
+
+                    triangles.append({
+                        'vertices': (p1, p2, p3),
+                        'cost': cost
+                    })
+            except:
+                continue
+
+        return points, triangles
+
+    def solve(self):
+        """Solve the optimization problem"""
+        try:
+            self.ui.update_status("Solving...")
+
+            # Parse data
+            points, triangles = self.parse_input_data()
+
+            if len(points) < 3:
+                raise ValueError("Need at least 3 points")
+
+            # Create structure
+            self.structure = TrussStructure()
+
+            # Add points
+            for p in points:
+                self.structure.add_point(p['x'], p['y'])
+
+            # Add triangles
+            for t in triangles:
+                self.structure.add_triangle(t['vertices'], t['cost'])
+
+            # Set parameters from UI
+            self.structure.min_triangles = self.ui.spinMinTriangles.value()
+            self.structure.max_triangles = self.ui.spinMaxTriangles.value()
+            self.structure.budget = self.ui.spinBudget.value()
+
+            # Solve
+            solver = SimpleTriangulationSolver(self.structure)
+            result = solver.solve_with_gurobi()
+
+            # Display results
+            self.display_results(result)
+
+            # Update status
+            if result['status'] in ['OPTIMAL', 'SUCCESS']:
+                self.ui.update_status(f"Solved: {result['num_triangles']} triangles selected")
+            else:
+                self.ui.update_status(f"Failed: {result.get('error', 'Unknown error')}", is_error=True)
+
+            # Plot results if available
+            if result.get('selected_triangles'):
+                self.plot_solution(result)
+
+        except Exception as e:
+            self.ui.update_status(f"Error: {str(e)}", is_error=True)
+            QMessageBox.critical(self.parent, "Error", f"Optimization error: {str(e)}")
+
+    def display_results(self, result):
+        """Display results in HTML format like other tabs"""
+        if result['status'] not in ['OPTIMAL', 'SUCCESS']:
+            html = f"""
+            <h3 style='color: #e74c3c;'>❌ Optimization Failed</h3>
+            <p><b>Error:</b> {result.get('error', 'Unknown error')}</p>
+            """
+            self.ui.textResults.setHtml(html)
+            return
+
+        # Format successful results
+        coverage_pct = result['coverage_rate'] * 100
+
+        html = f"""
+        <h3 style='color: #2ecc71;'>✅ Optimization Successful</h3>
+        <hr>
+        <table style='width: 100%; border-collapse: collapse;'>
+            <tr>
+                <td style='padding: 5px;'><b>Status:</b></td>
+                <td style='padding: 5px;'>{result['status']}</td>
+            </tr>
+            <tr style='background-color: #f8f9fa;'>
+                <td style='padding: 5px;'><b>Triangles Selected:</b></td>
+                <td style='padding: 5px;'>{result['num_triangles']}</td>
+            </tr>
+            <tr>
+                <td style='padding: 5px;'><b>Total Cost:</b></td>
+                <td style='padding: 5px;'>{result['total_cost']:.2f} €</td>
+            </tr>
+            <tr style='background-color: #f8f9fa;'>
+                <td style='padding: 5px;'><b>Points Covered:</b></td>
+                <td style='padding: 5px;'>{result['covered_points']}/{result['total_points']} ({coverage_pct:.1f}%)</td>
+            </tr>
+            <tr>
+                <td style='padding: 5px;'><b>Method:</b></td>
+                <td style='padding: 5px;'>{result.get('method', 'Gurobi')}</td>
+            </tr>
+        </table>
+
+        <h4>Selected Triangles:</h4>
+        <table style='width: 100%; border-collapse: collapse; border: 1px solid #ddd;'>
+            <tr style='background-color: #1abc9c; color: white;'>
+                <th style='padding: 8px;'>Triangle</th>
+                <th style='padding: 8px;'>Points</th>
+                <th style='padding: 8px;'>Cost</th>
+            </tr>
+        """
+
+        if result.get('selected_triangles'):
+            for i, tri in enumerate(result['selected_triangles']):
+                p1, p2, p3 = tri.vertices
+                html += f"""
+                <tr style='border-bottom: 1px solid #ddd;'>
+                    <td style='padding: 8px;'>{i+1}</td>
+                    <td style='padding: 8px;'>({p1}, {p2}, {p3})</td>
+                    <td style='padding: 8px;'>{tri.cost:.2f} €</td>
+                </tr>
+                """
+        else:
+            html += """
+            <tr>
+                <td colspan='3' style='padding: 8px; text-align: center;'>No triangles selected</td>
+            </tr>
+            """
+
+        html += "</table>"
+
+        self.ui.textResults.setHtml(html)
+
+    def plot_solution(self, result):
+        """Plot the solution"""
+        try:
+            from shared.visualization import plot_triangulation_solution
+
+            if not result.get('selected_triangles'):
+                return
+
+            # Prepare data for plotting
+            points_data = []
+            for i, point in enumerate(self.structure.points):
+                points_data.append({
+                    'id': i,
+                    'x': point.x,
+                    'y': point.y
+                })
+
+            triangles_data = []
+            for tri in result['selected_triangles']:
+                triangles_data.append({
+                    'vertices': tri.vertices,
+                    'cost': tri.cost
+                })
+
+            # Create figure
+            self.canvas.figure.clear()
+            fig = plot_triangulation_solution(
+                points=points_data,
+                selected_triangles=triangles_data,
+                title="Truss Structure Optimization"
+            )
+            self.canvas.figure = fig
+            self.canvas.draw()
+
+        except Exception as e:
+            print(f"Error plotting: {e}")
+
+
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -842,6 +1091,10 @@ class Main(QMainWindow):
         self.antenna_controller = AntennaController(self.antenna_tab)
         self.tab_widget.addTab(self.antenna_tab, "📶 Antenna")
 
+        # 10.5 - Triangulation
+        self.triangulation_tab = QWidget()
+        self.triangulation_controller = TriangulationController(self.triangulation_tab)
+        self.tab_widget.addTab(self.triangulation_tab, "🔺 Triangulation")
 
         self.setCentralWidget(self.tab_widget)
 
@@ -860,12 +1113,12 @@ class Main(QMainWindow):
         self.status_bar.addPermanentWidget(self.memory_label)
 
         # Create menu bar
-        self.create_menu_bar()
+        # self.create_menu_bar()
 
         # Timer for updating status
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_status)
-        self.timer.start(5000)
+        # self.timer = QTimer()
+        # self.timer.timeout.connect(self.update_status)
+        # self.timer.start(5000)
 
     def create_menu_bar(self):
         menubar = self.menuBar()
@@ -892,7 +1145,7 @@ class Main(QMainWindow):
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
 
-    def update_status(self, message, is_error=False):
+    def update_status(self, message="", is_error=False):
         """Update status bar with colored message"""
         if is_error:
             self.status_bar.showMessage(f"❌ {message}", 5000)
