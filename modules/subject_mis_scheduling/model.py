@@ -12,14 +12,12 @@ class MISModel:
         self.conflicts = conflicts
         self.num_tasks = len(tasks)
 
-        # Créer la matrice d'adjacence
         self.adjacency_matrix = [[0] * self.num_tasks for _ in range(self.num_tasks)]
         for i, j in conflicts:
             if i < self.num_tasks and j < self.num_tasks:
                 self.adjacency_matrix[i][j] = 1
                 self.adjacency_matrix[j][i] = 1
 
-        # Poids des tâches
         if weights:
             self.weights = weights
         else:

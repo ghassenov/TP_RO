@@ -1,6 +1,8 @@
 import gurobipy as gp
 from gurobipy import GRB
+
 from .model import TelecomNetworkModel
+
 
 class SimpleTelecomSolver:
     """Version simplifiée du solveur pour éviter les problèmes d'infeasibility"""
@@ -47,6 +49,14 @@ class SimpleTelecomSolver:
             # Demande sortante approximative
             node_demand = sum(self.model_data.demands[i][j] for j in range(N) if j != i)
             m.addConstr(outgoing_flow >= node_demand * 0.5, name=f"demand_out_{i}")
+        # Also check incoming flow
+        for i in range(N):
+            incoming_flow = gp.quicksum(
+                flow[l] for l in range(L)
+                if self.model_data.potential_links[l]['to'] == i
+            )
+            node_incoming_demand = sum(self.model_data.demands[j][i] for j in range(N) if j != i)
+            m.addConstr(incoming_flow >= node_incoming_demand * 0.5, name=f"demand_in_{i}")
 
         # 3. Budget
         if self.model_data.budget:
