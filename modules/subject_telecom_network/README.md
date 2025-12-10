@@ -11,7 +11,7 @@ Déterminer quelles connexions établir dans un réseau de télécommunications 
 - sᵢⱼ ≥ 0: Demande satisfaite entre les nœuds i et j
 
 ### Objectif
-Minimiser: Σₗ cₗ·yₗ + α·ΣᵢΣⱼ (dᵢⱼ - sᵢⱼ)
+Minimiser: Σₗ cₗ·yₗ
 
 ### Contraintes
 1. Capacité: fₗ ≤ C·yₗ ∀l (C = 1000 Gbps)
