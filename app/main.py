@@ -1071,8 +1071,7 @@ class Main(QMainWindow):
         self.tab_widget.setTabPosition(QTabWidget.North)
         self.tab_widget.setMovable(True)
 
-
-        # introduction tab
+        # Introduction tab
         self.intro_tab = QWidget()
         self.intro_controller = IntroductionController(self.intro_tab)
         self.tab_widget.addTab(self.intro_tab, "🏠 Home")
@@ -1098,9 +1097,15 @@ class Main(QMainWindow):
         self.tab_widget.addTab(self.antenna_tab, "📶 Antenna")
 
         # 10.5 - Triangulation
-        self.triangulation_tab = QWidget()
-        self.triangulation_controller = TriangulationController(self.triangulation_tab)
-        self.tab_widget.addTab(self.triangulation_tab, "🔺 Triangulation")
+        #self.triangulation_tab = QWidget()
+        #self.triangulation_controller = TriangulationController(self.triangulation_tab)
+        #self.tab_widget.addTab(self.triangulation_tab, "🔺 Triangulation")
+
+        # 10.5: Truss Physical Optimizer Tab
+        self.truss_tab = QWidget()
+        from app.ui.truss_ui import TrussOptimizerController
+        self.truss_controller = TrussOptimizerController(self.truss_tab)
+        self.tab_widget.addTab(self.truss_tab, "🏗️ Truss Optimizer")
 
         self.setCentralWidget(self.tab_widget)
 
